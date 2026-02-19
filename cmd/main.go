@@ -29,17 +29,6 @@ func main() {
 
 	fmt.Println(FileInfo)
 
-	// resp, _ := http.NewRequest("GET", arg, nil)
-
-	// resp.Header.Set("Range", "bytes=0-1023")
-	// client := &http.Client{}
-
-	// respg, _ := client.Do(resp)
-
-	// defer respg.Body.Close()
-
-	// fmt.Println(respg)
-
 	chunks := chunk.SplitIntoChuncks(5242880, 4)
 	fmt.Println(chunks)
 

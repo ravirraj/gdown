@@ -10,6 +10,7 @@ func SplitIntoChuncks(fileSize int64, workers int) []types.Chunk {
 	chunckSize := fileSize / int64(workers)
 	var start int64 = 0
 
+	//this one also was a good approch
 	// end := chunckSize - 1
 
 	// for i := 0; i < workers; i++ {
@@ -24,6 +25,9 @@ func SplitIntoChuncks(fileSize int64, workers int) []types.Chunk {
 	// 	end = end + chunckSize
 	// }
 
+	// chuncks = append(chuncks, types.Chunk{Index: 4, Start: int64(start), End: fileSize - 1})
+
+	// this one is much cleaner
 	for i := 0; i < workers; i++ {
 		end := start + chunckSize - 1
 
@@ -40,6 +44,5 @@ func SplitIntoChuncks(fileSize int64, workers int) []types.Chunk {
 		start += chunckSize
 	}
 
-	// chuncks = append(chuncks, types.Chunk{Index: 4, Start: int64(start), End: fileSize - 1})
 	return chuncks
 }
