@@ -52,7 +52,8 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 
 	}
 
-	dowlaodDir := filepath.Join(fileThe, "downlaod")
+	dowlaodDir := filepath.Join(fileThe, "download")
+	fmt.Println(dowlaodDir)
 
 	err = os.MkdirAll(dowlaodDir, 0755)
 	if err != nil {

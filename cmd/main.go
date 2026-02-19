@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/ravirraj/gdown/internal/chunk"
 	"github.com/ravirraj/gdown/internal/httpclient"
+	"github.com/ravirraj/gdown/internal/merger"
+	_ "github.com/ravirraj/gdown/internal/merger"
 	_ "github.com/ravirraj/gdown/internal/types"
 	"github.com/ravirraj/gdown/internal/worker"
 )
@@ -30,7 +33,7 @@ func main() {
 
 	fmt.Println(FileInfo)
 
-	chunks := chunk.SplitIntoChuncks(5242880, 4)
+	chunks := chunk.SplitIntoChuncks(FileInfo.Size, 4)
 	fmt.Println(chunks)
 
 	// err = httpclient.DownloadChunnk(arg, chunks[0], "ravi")
@@ -38,7 +41,13 @@ func main() {
 	// 	panic(err)
 	// }
 
-	err = worker.StartWorkers(arg, chunks, "ravi", 8)
+	baseUrl := filepath.Base(arg)
+	err = worker.StartWorkers(arg, chunks, baseUrl, 8)
+	if err != nil {
+		panic(err)
+	}
+
+	err = merger.MergerFiles(baseUrl,4)
 	if err != nil {
 		panic(err)
 	}
