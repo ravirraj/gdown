@@ -31,6 +31,9 @@ func main() {
 
 	chunks := chunk.SplitIntoChuncks(5242880, 4)
 	fmt.Println(chunks)
-
-	fmt.Println(chunks)
+	
+	err = httpclient.DownloadChunnk(arg,chunks[0] , "ravi")
+	if err!= nil {
+		panic(err)
+	}
 }
