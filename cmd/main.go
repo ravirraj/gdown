@@ -25,6 +25,8 @@ func main() {
 
 	fmt.Println(arg)
 
+
+	//get all file info 
 	FileInfo, err := httpclient.CheckUrl(arg)
 	if err != nil {
 		slog.Error("ERROR GETTING FILE DETAILS ", "error", err)
@@ -33,6 +35,8 @@ func main() {
 
 	fmt.Println(FileInfo)
 
+
+	//make partes of that file 
 	chunks := chunk.SplitIntoChuncks(FileInfo.Size, 4)
 	fmt.Println(chunks)
 
@@ -41,12 +45,15 @@ func main() {
 	// 	panic(err)
 	// }
 
+
+	//downlaod every part 
 	baseUrl := filepath.Base(arg)
 	err = worker.StartWorkers(arg, chunks, baseUrl, 8)
 	if err != nil {
 		panic(err)
 	}
 
+	//merge the parts to one file 
 	err = merger.MergerFiles(baseUrl,4)
 	if err != nil {
 		panic(err)
