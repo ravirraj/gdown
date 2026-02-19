@@ -35,7 +35,6 @@ func CheckUrl(url string) (types.FileInfo, error) {
 		return fileInfo, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-
 	fileSize := resp.ContentLength
 
 	if fileSize < 0 {
@@ -52,5 +51,25 @@ func CheckUrl(url string) (types.FileInfo, error) {
 
 	fileInfo.FileName = file
 
+	// send a get request to confirm the if the file supprots the parital downlaod
+
+	resGet, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fileInfo, err
+	}
+	resGet.Header.Set("Range", "bytes=0-1023")
+
+	respGet, err := client.Do(resGet)
+	if err != nil {
+		return fileInfo, err
+	}
+	defer respGet.Body.Close()
+
+	if respGet.StatusCode != http.StatusPartialContent {
+		return fileInfo, fmt.Errorf("server does not support partial content")
+
+	}
+
+	fileInfo.RangeVerified = true
 	return fileInfo, nil
 }
