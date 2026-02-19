@@ -43,7 +43,7 @@ func main() {
 
 	//downlaod every part
 	baseUrl := filepath.Base(arg)
-	err = worker.StartWorkers(arg, chunks, baseUrl, 8)
+	err = worker.StartWorkers(arg, chunks, baseUrl, 4)
 	if err != nil {
 		panic(err)
 	}
