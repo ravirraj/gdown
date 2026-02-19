@@ -35,6 +35,6 @@ go.work.sum
 *.exe
 *.out
 *.test
-
+gdown-linux
 # Build
 /build/
