@@ -5,12 +5,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-
+	"path/filepath"
 
 	"github.com/ravirraj/gdown/internal/types"
 )
 
-func DownloadChunnk(client *http.Client ,url string, c types.Chunk, baseFileurl string) error {
+func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl string) error {
 
 	resGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -18,8 +18,6 @@ func DownloadChunnk(client *http.Client ,url string, c types.Chunk, baseFileurl 
 	}
 
 	resGet.Header.Set("Range", fmt.Sprintf("bytes=%v-%v", c.Start, c.End))
-
-	
 
 	respGet, err := client.Do(resGet)
 	if err != nil {
@@ -47,9 +45,25 @@ func DownloadChunnk(client *http.Client ,url string, c types.Chunk, baseFileurl 
 
 	// }
 
+	fileThe, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		return err
+
+	}
+
+	dowlaodDir := filepath.Join(fileThe, "downlaod")
+
+	err = os.MkdirAll(dowlaodDir, 0755)
+	if err != nil {
+		return err
+	}
+
 	expectedSize := (c.End - c.Start) + 1
 	fileName := fmt.Sprintf("%v.part%v", baseFileurl, c.Index)
-	file, err := os.Create(fileName)
+
+	filePath := filepath.Join(dowlaodDir, fileName)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
