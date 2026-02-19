@@ -8,6 +8,7 @@ import (
 	"github.com/ravirraj/gdown/internal/chunk"
 	"github.com/ravirraj/gdown/internal/httpclient"
 	_ "github.com/ravirraj/gdown/internal/types"
+	"github.com/ravirraj/gdown/internal/worker"
 )
 
 func main() {
@@ -31,9 +32,14 @@ func main() {
 
 	chunks := chunk.SplitIntoChuncks(5242880, 4)
 	fmt.Println(chunks)
-	
-	err = httpclient.DownloadChunnk(arg,chunks[0] , "ravi")
-	if err!= nil {
+
+	// err = httpclient.DownloadChunnk(arg, chunks[0], "ravi")
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	err = worker.StartWorkers(arg, chunks, "ravi", 8)
+	if err != nil {
 		panic(err)
 	}
 }

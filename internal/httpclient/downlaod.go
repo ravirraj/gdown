@@ -5,12 +5,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
+
 
 	"github.com/ravirraj/gdown/internal/types"
 )
 
-func DownloadChunnk(url string, c types.Chunk, baseFileurl string) error {
+func DownloadChunnk(client *http.Client ,url string, c types.Chunk, baseFileurl string) error {
 
 	resGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -19,9 +19,7 @@ func DownloadChunnk(url string, c types.Chunk, baseFileurl string) error {
 
 	resGet.Header.Set("Range", fmt.Sprintf("bytes=%v-%v", c.Start, c.End))
 
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	
 
 	respGet, err := client.Do(resGet)
 	if err != nil {
