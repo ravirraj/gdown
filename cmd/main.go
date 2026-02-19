@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/ravirraj/gdown/internal/chunk"
 	"github.com/ravirraj/gdown/internal/httpclient"
 	_ "github.com/ravirraj/gdown/internal/types"
 )
@@ -39,4 +40,8 @@ func main() {
 
 	// fmt.Println(respg)
 
+	chunks := chunk.SplitIntoChuncks(5242880, 4)
+	fmt.Println(chunks)
+
+	fmt.Println(chunks)
 }
