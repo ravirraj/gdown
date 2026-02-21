@@ -6,12 +6,52 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/ravirraj/gdown/internal/types"
 )
 
 func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl string) error {
 
+	var lastErr error
+	fileThe, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		return err
+
+	}
+
+	dowlaodDir := filepath.Join(fileThe, "download")
+	err = os.MkdirAll(dowlaodDir, 0755)
+	if err != nil {
+		return err
+	}
+	fileName := fmt.Sprintf("%v.part%v", baseFileurl, c.Index)
+
+	filePath := filepath.Join(dowlaodDir, fileName)
+
+	for i := 0; i < 3; i++ {
+
+		err := downlaod(client, url, c, filePath)
+
+		if err == nil {
+			fmt.Println("NO ERRORS ")
+			return nil
+		}
+
+		os.Remove(filePath)
+
+		lastErr = err
+
+		if i < 3 {
+			time.Sleep(2 * time.Second)
+		}
+
+	}
+	return fmt.Errorf("failed after retries %w", lastErr)
+}
+
+func downlaod(client *http.Client, url string, c types.Chunk, filePath string) error {
 	resGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -30,40 +70,25 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 		return fmt.Errorf("file does not support the partial downaload ")
 	}
 
-	//we have multiple files , so we need to loop over every file
-
-	// for i := 0; i < c.Index; i++ {
-	// 	fileName := fmt.Sprintf("baseFileurl.part{%v}", c.Index)
-	// 	file, err := os.Create(fileName)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	defer file.Close()
-
-	// 	_, err = io.Copy(file, respGet.Body)
+	// fileThe, err := os.Getwd()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return err
 
 	// }
 
-	fileThe, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-		return err
+	// dowlaodDir := filepath.Join(fileThe, "download")
+	// fmt.Println(dowlaodDir)
 
-	}
-
-	dowlaodDir := filepath.Join(fileThe, "download")
-	fmt.Println(dowlaodDir)
-
-	err = os.MkdirAll(dowlaodDir, 0755)
-	if err != nil {
-		return err
-	}
+	// err = os.MkdirAll(dowlaodDir, 0755)
+	// if err != nil {
+	// 	return err
+	// }
 
 	expectedSize := (c.End - c.Start) + 1
-	fileName := fmt.Sprintf("%v.part%v", baseFileurl, c.Index)
+	// fileName := fmt.Sprintf("%v.part%v", baseFileurl, c.Index)
 
-	filePath := filepath.Join(dowlaodDir, fileName)
+	// filePath := filepath.Join(dowlaodDir, fileName)
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -79,7 +104,5 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 	if downlaodedFile != expectedSize {
 		return fmt.Errorf("Downlaod incomplete")
 	}
-
-	return err
-
+	return nil
 }
