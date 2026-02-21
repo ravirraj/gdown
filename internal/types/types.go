@@ -4,7 +4,7 @@ type FileInfo struct {
 	Size          int64
 	SupportRange  bool
 	FileName      string
-	RangeVerified bool
+	// RangeVerified bool
 }
 
 type Chunk struct {

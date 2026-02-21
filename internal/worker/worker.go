@@ -2,7 +2,7 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 	"net/http"
 	"sync"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/ravirraj/gdown/internal/types"
 )
 
-func StartWorkers(url string, c []types.Chunk, baseUrl string, workers int) error {
+func StartWorkers(url string, c []types.Chunk, baseUrl string, workers int, progressChan chan int64) error {
 
 	client := &http.Client{
 		// Timeout: 30 * time.Second,
@@ -37,11 +37,11 @@ func StartWorkers(url string, c []types.Chunk, baseUrl string, workers int) erro
 			for job := range jobs {
 				select {
 				case <-ctx.Done():
-					fmt.Println("worker stoped ")
+					// fmt.Println("worker stoped ")
 					return
 
 				default:
-					err := httpclient.DownloadChunnk(client, url, job,baseUrl)
+					err := httpclient.DownloadChunnk(client, url, job, baseUrl, progressChan)
 					if err != nil {
 						select {
 						case errChan <- err:
@@ -50,7 +50,7 @@ func StartWorkers(url string, c []types.Chunk, baseUrl string, workers int) erro
 						cancle()
 						return
 					}
-					fmt.Println("working on", job.Index)
+					// fmt.Println("working on", job.Index)
 				}
 
 			}
@@ -73,11 +73,12 @@ sendingJob:
 
 	//wait for workres to complete the job
 	wg.Wait()
+	close(progressChan)
 	select {
 	case err := <-errChan:
 		return err
 	default:
 	}
-	fmt.Println("all work done")
+	// fmt.Println("all work done")
 	return nil
 }

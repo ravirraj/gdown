@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/ravirraj/gdown/internal/chunk"
 	"github.com/ravirraj/gdown/internal/httpclient"
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+
+	progress := make(chan int64, 100)
 
 	if len(os.Args) < 2 {
 		fmt.Println("reqired a field ")
@@ -34,16 +37,33 @@ func main() {
 
 	//make partes of that file
 	chunks := chunk.SplitIntoChuncks(FileInfo.Size, 4)
-	fmt.Println(chunks)
 
-	// err = httpclient.DownloadChunnk(arg, chunks[0], "ravi")
-	// if err != nil {
-	// 	panic(err)
-	// }
 
-	//downlaod every part
+	totalFileSize := FileInfo.Size
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+	go func() {
+		var downloaded int64
+		for {
+			select {
+			case n, ok := <-progress:
+				if !ok {
+					return
+				}
+				downloaded += n
+
+			case <-ticker.C:
+				percent := float64(downloaded) / float64(totalFileSize) * 100
+				fmt.Printf("\rDownloading: %.2f%%", percent)
+
+			}
+			// fmt.Printf("Downlaoded %v",downlaoded)
+			// percentage := downloaded / totalFileSize * 100
+		}
+	}()
+
 	baseUrl := filepath.Base(arg)
-	err = worker.StartWorkers(arg, chunks, baseUrl, 4)
+	err = worker.StartWorkers(arg, chunks, baseUrl, 4, progress)
 	if err != nil {
 		panic(err)
 	}

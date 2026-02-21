@@ -11,13 +11,20 @@ import (
 	"github.com/ravirraj/gdown/internal/types"
 )
 
-func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl string) error {
+func (pw *ProgressWritter) Write(b []byte) (int, error) {
+	n, err := pw.file.Write(b)
+	if n > 0 {
+		pw.progress <- int64(n)
+	}
 
+	return n, err
+}
+
+func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl string, progressChan chan int64) error {
 
 	// this will downlaod the perticular part of the file and if the downloading fails it will retry it , if it still fails it will stop
 
-
-	//this to thorw last error after retrying 
+	//this to thorw last error after retrying
 	var lastErr error
 
 	//this to get file info and after that we will create a dir called downlaod and in that , all parts are saved
@@ -37,12 +44,10 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 
 	filePath := filepath.Join(dowlaodDir, fileName)
 
-
-
-	//retry logic 
+	//retry logic
 	for i := 0; i < 3; i++ {
 
-		err := downlaod(client, url, c, filePath)
+		err := downlaod(client, url, c, filePath, progressChan)
 
 		if err == nil {
 			fmt.Println("NO ERRORS ")
@@ -54,18 +59,20 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 
 		lastErr = err
 
-		// 2 second sleep after the files fails 
-		if i < 3 {
+		// 2 second sleep after the files fails
+		if i < 2 {
 			time.Sleep(2 * time.Second)
 		}
 
 	}
+
+	//progress bar implemantation
+
 	return fmt.Errorf("failed after retries %w", lastErr)
 }
 
-
 // this functions downlaod the actully file , main download logic is in here
-func downlaod(client *http.Client, url string, c types.Chunk, filePath string) error {
+func downlaod(client *http.Client, url string, c types.Chunk, filePath string, progressChan chan int64) error {
 	resGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -84,25 +91,9 @@ func downlaod(client *http.Client, url string, c types.Chunk, filePath string) e
 		return fmt.Errorf("file does not support the partial downaload ")
 	}
 
-	// fileThe, err := os.Getwd()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return err
-
-	// }
-
-	// dowlaodDir := filepath.Join(fileThe, "download")
-	// fmt.Println(dowlaodDir)
-
-	// err = os.MkdirAll(dowlaodDir, 0755)
-	// if err != nil {
-	// 	return err
-	// }
 
 	expectedSize := (c.End - c.Start) + 1
-	// fileName := fmt.Sprintf("%v.part%v", baseFileurl, c.Index)
-
-	// filePath := filepath.Join(dowlaodDir, fileName)
+	
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -110,7 +101,11 @@ func downlaod(client *http.Client, url string, c types.Chunk, filePath string) e
 
 	defer file.Close()
 
-	downlaodedFile, err := io.Copy(file, respGet.Body)
+	//custom writter for progress
+
+	progressWriter := &ProgressWritter{file: file, progress: progressChan}
+
+	downlaodedFile, err := io.Copy(progressWriter, respGet.Body)
 	if err != nil {
 		return err
 	}
