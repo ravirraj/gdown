@@ -13,7 +13,14 @@ import (
 
 func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl string) error {
 
+
+	// this will downlaod the perticular part of the file and if the downloading fails it will retry it , if it still fails it will stop
+
+
+	//this to thorw last error after retrying 
 	var lastErr error
+
+	//this to get file info and after that we will create a dir called downlaod and in that , all parts are saved
 	fileThe, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
@@ -30,6 +37,9 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 
 	filePath := filepath.Join(dowlaodDir, fileName)
 
+
+
+	//retry logic 
 	for i := 0; i < 3; i++ {
 
 		err := downlaod(client, url, c, filePath)
@@ -39,10 +49,12 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 			return nil
 		}
 
+		//removing the partially downlaoded file
 		os.Remove(filePath)
 
 		lastErr = err
 
+		// 2 second sleep after the files fails 
 		if i < 3 {
 			time.Sleep(2 * time.Second)
 		}
@@ -51,6 +63,8 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 	return fmt.Errorf("failed after retries %w", lastErr)
 }
 
+
+// this functions downlaod the actully file , main download logic is in here
 func downlaod(client *http.Client, url string, c types.Chunk, filePath string) error {
 	resGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
