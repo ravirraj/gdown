@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"time"
 
@@ -15,6 +17,8 @@ import (
 
 func main() {
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 	progress := make(chan int64, 100)
 
 	if len(os.Args) < 2 {
@@ -37,7 +41,6 @@ func main() {
 
 	//make partes of that file
 	chunks := chunk.SplitIntoChuncks(FileInfo.Size, 4)
-
 
 	totalFileSize := FileInfo.Size
 	ticker := time.NewTicker(500 * time.Millisecond)
@@ -63,7 +66,7 @@ func main() {
 	}()
 
 	baseUrl := filepath.Base(arg)
-	err = worker.StartWorkers(arg, chunks, baseUrl, 4, progress)
+	err = worker.StartWorkers(ctx ,arg, chunks, baseUrl, 4, progress)
 	if err != nil {
 		panic(err)
 	}

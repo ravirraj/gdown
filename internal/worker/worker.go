@@ -10,13 +10,13 @@ import (
 	"github.com/ravirraj/gdown/internal/types"
 )
 
-func StartWorkers(url string, c []types.Chunk, baseUrl string, workers int, progressChan chan int64) error {
+func StartWorkers(ctx context.Context ,url string, c []types.Chunk, baseUrl string, workers int, progressChan chan int64) error {
 
 	client := &http.Client{
 		// Timeout: 30 * time.Second,
 	}
 
-	ctx, cancle := context.WithCancel(context.Background())
+	ctx, cancle := context.WithCancel(ctx)
 	defer cancle()
 	//create a wg(wait group)
 	var wg sync.WaitGroup
@@ -41,7 +41,7 @@ func StartWorkers(url string, c []types.Chunk, baseUrl string, workers int, prog
 					return
 
 				default:
-					err := httpclient.DownloadChunnk(client, url, job, baseUrl, progressChan)
+					err := httpclient.DownloadChunnk(ctx,client, url, job, baseUrl, progressChan)
 					if err != nil {
 						select {
 						case errChan <- err:

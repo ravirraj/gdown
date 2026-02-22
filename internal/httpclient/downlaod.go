@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +21,7 @@ func (pw *ProgressWritter) Write(b []byte) (int, error) {
 	return n, err
 }
 
-func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl string, progressChan chan int64) error {
+func DownloadChunnk(ctx context.Context, client *http.Client, url string, c types.Chunk, baseFileurl string, progressChan chan int64) error {
 
 	// this will downlaod the perticular part of the file and if the downloading fails it will retry it , if it still fails it will stop
 
@@ -47,7 +48,7 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 	//retry logic
 	for i := 0; i < 3; i++ {
 
-		err := downlaod(client, url, c, filePath, progressChan)
+		err := downlaod(ctx, client, url, c, filePath, progressChan)
 
 		if err == nil {
 			fmt.Println("NO ERRORS ")
@@ -72,8 +73,8 @@ func DownloadChunnk(client *http.Client, url string, c types.Chunk, baseFileurl 
 }
 
 // this functions downlaod the actully file , main download logic is in here
-func downlaod(client *http.Client, url string, c types.Chunk, filePath string, progressChan chan int64) error {
-	resGet, err := http.NewRequest("GET", url, nil)
+func downlaod(ctx context.Context, client *http.Client, url string, c types.Chunk, filePath string, progressChan chan int64) error {
+	resGet, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
@@ -91,9 +92,8 @@ func downlaod(client *http.Client, url string, c types.Chunk, filePath string, p
 		return fmt.Errorf("file does not support the partial downaload ")
 	}
 
-
 	expectedSize := (c.End - c.Start) + 1
-	
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
