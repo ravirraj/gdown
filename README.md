@@ -8,6 +8,7 @@ A concurrent file downloader written in Go. Downloads files in parallel chunks u
 - HTTP Range request support for resumable downloads
 - Configurable worker pool and chunk size
 - Automatic file merging after download
+- Resume Support
 
 ## Build
 
